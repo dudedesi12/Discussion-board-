@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block title %}Users - Discussion Board{% endblock %}
+
+{% block content %}
+<h2 class="mb-4"><i class="bi bi-people me-2"></i>Community Members</h2>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-warning text-dark">
+                <i class="bi bi-headset me-1"></i>Agents ({{ agents|length }})
+            </div>
+            <ul class="list-group list-group-flush">
+                {% for user in agents %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="bi bi-person-badge me-1"></i>
+                        <strong>{{ user.username }}</strong>
+                        <small class="text-muted ms-2">Joined {{ user.created_at.strftime('%b %Y') }}</small>
+                    </div>
+                    {% if current_user.is_authenticated and current_user.id != user.id %}
+                    <a href="{{ url_for('messages.compose', username=user.username) }}"
+                       class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-envelope me-1"></i>Message
+                    </a>
+                    {% endif %}
+                </li>
+                {% else %}
+                <li class="list-group-item text-muted">No agents registered yet.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-info text-dark">
+                <i class="bi bi-person-lines-fill me-1"></i>Customers ({{ customers|length }})
+            </div>
+            <ul class="list-group list-group-flush">
+                {% for user in customers %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="bi bi-person me-1"></i>
+                        <strong>{{ user.username }}</strong>
+                        <small class="text-muted ms-2">Joined {{ user.created_at.strftime('%b %Y') }}</small>
+                    </div>
+                    {% if current_user.is_authenticated and current_user.id != user.id %}
+                    <a href="{{ url_for('messages.compose', username=user.username) }}"
+                       class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-envelope me-1"></i>Message
+                    </a>
+                    {% endif %}
+                </li>
+                {% else %}
+                <li class="list-group-item text-muted">No customers registered yet.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

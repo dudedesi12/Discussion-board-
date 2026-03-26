@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ post.title }} - Discussion Board{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Post -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="badge bg-secondary me-2">{{ post.category }}</span>
+                    <strong>{{ post.title }}</strong>
+                </div>
+                {% if current_user.is_authenticated and (current_user.id == post.user_id or current_user.is_agent) %}
+                <form method="POST" action="{{ url_for('board.delete_post', post_id=post.id) }}"
+                      onsubmit="return confirm('Delete this post?')">
+                    {{ form.hidden_tag() }}
+                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div>
+                        {% if post.author.is_agent %}
+                        <span class="badge bg-warning text-dark me-1">Agent</span>
+                        {% else %}
+                        <span class="badge bg-info text-dark me-1">Customer</span>
+                        {% endif %}
+                        <strong>{{ post.author.username }}</strong>
+                        <small class="text-muted ms-2">
+                            {{ post.created_at.strftime('%B %d, %Y at %H:%M') }}
+                        </small>
+                    </div>
+                    {% if current_user.is_authenticated and current_user.id != post.user_id %}
+                    <a href="{{ url_for('messages.compose', username=post.author.username) }}"
+                       class="btn btn-sm btn-outline-primary ms-auto">
+                        <i class="bi bi-envelope me-1"></i>Message {{ post.author.username }}
+                    </a>
+                    {% endif %}
+                </div>
+                <div class="post-body">{{ post.body }}</div>
+            </div>
+        </div>
+
+        <!-- Replies -->
+        <h5 class="mb-3">
+            <i class="bi bi-chat me-1"></i>{{ post.reply_count }} Repl{{ 'y' if post.reply_count == 1 else 'ies' }}
+        </h5>
+
+        {% for reply in replies %}
+        <div class="card mb-3 {% if reply.author.is_agent %}border-warning{% endif %}">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                        <div class="d-flex align-items-center mb-2">
+                            {% if reply.author.is_agent %}
+                            <span class="badge bg-warning text-dark me-1">Agent</span>
+                            {% else %}
+                            <span class="badge bg-info text-dark me-1">Customer</span>
+                            {% endif %}
+                            <strong>{{ reply.author.username }}</strong>
+                            <small class="text-muted ms-2">
+                                {{ reply.created_at.strftime('%B %d, %Y at %H:%M') }}
+                            </small>
+                        </div>
+                        <p class="mb-0">{{ reply.body }}</p>
+                    </div>
+                    <div class="ms-3 d-flex gap-2">
+                        {% if current_user.is_authenticated and current_user.id != reply.user_id %}
+                        <a href="{{ url_for('messages.compose', username=reply.author.username) }}"
+                           class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-envelope"></i>
+                        </a>
+                        {% endif %}
+                        {% if current_user.is_authenticated and (current_user.id == reply.user_id or current_user.is_agent) %}
+                        <form method="POST"
+                              action="{{ url_for('board.delete_reply', reply_id=reply.id) }}"
+                              onsubmit="return confirm('Delete this reply?')">
+                            {{ form.hidden_tag() }}
+                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+        <!-- Reply Form -->
+        {% if current_user.is_authenticated %}
+        <div class="card mt-4">
+            <div class="card-header">
+                {% if current_user.is_agent %}
+                <i class="bi bi-headset me-1"></i>Reply as Agent
+                {% else %}
+                <i class="bi bi-chat-dots me-1"></i>Post a Reply
+                {% endif %}
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    <div class="mb-3">
+                        {{ form.body(class="form-control" + (" is-invalid" if form.body.errors else ""),
+                           rows=4, placeholder="Write your reply here...") }}
+                        {% for error in form.body.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    {{ form.submit(class="btn btn-primary") }}
+                </form>
+            </div>
+        </div>
+        {% else %}
+        <div class="alert alert-info mt-4">
+            <a href="{{ url_for('auth.login') }}">Log in</a> or
+            <a href="{{ url_for('auth.register') }}">register</a> to reply.
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-info-circle me-1"></i>Post Details
+            </div>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item">
+                    <small class="text-muted">Posted by</small><br>
+                    <strong>{{ post.author.username }}</strong>
+                    {% if post.author.is_agent %}
+                    <span class="badge bg-warning text-dark ms-1">Agent</span>
+                    {% endif %}
+                </li>
+                <li class="list-group-item">
+                    <small class="text-muted">Category</small><br>
+                    <span class="badge bg-secondary">{{ post.category }}</span>
+                </li>
+                <li class="list-group-item">
+                    <small class="text-muted">Posted on</small><br>
+                    {{ post.created_at.strftime('%B %d, %Y') }}
+                </li>
+                <li class="list-group-item">
+                    <small class="text-muted">Replies</small><br>
+                    {{ post.reply_count }}
+                </li>
+            </ul>
+        </div>
+        <a href="{{ url_for('board.index') }}" class="btn btn-outline-secondary w-100 mt-3">
+            <i class="bi bi-arrow-left me-1"></i>Back to Board
+        </a>
+    </div>
+</div>
+{% endblock %}

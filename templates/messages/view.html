@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ msg.subject }} - Messages{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">{{ msg.subject }}</h5>
+                <form method="POST"
+                      action="{{ url_for('messages.delete_message', message_id=msg.id) }}"
+                      onsubmit="return confirm('Delete this message?')">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                        <i class="bi bi-trash me-1"></i>Delete
+                    </button>
+                </form>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-3 pb-3 border-bottom">
+                    <div>
+                        <div>
+                            <strong>From:</strong>
+                            {{ msg.sender.username }}
+                            {% if msg.sender.is_agent %}
+                            <span class="badge bg-warning text-dark ms-1">Agent</span>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <strong>To:</strong>
+                            {{ msg.recipient.username }}
+                        </div>
+                    </div>
+                    <small class="text-muted">
+                        {{ msg.created_at.strftime('%B %d, %Y at %H:%M') }}
+                    </small>
+                </div>
+                <div class="message-body">{{ msg.body }}</div>
+            </div>
+            <div class="card-footer d-flex gap-2">
+                {% if current_user.id == msg.recipient_id %}
+                <a href="{{ url_for('messages.compose', username=msg.sender.username) }}"
+                   class="btn btn-primary btn-sm">
+                    <i class="bi bi-reply me-1"></i>Reply
+                </a>
+                {% endif %}
+                <a href="{{ url_for('messages.inbox') }}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i>Back to Inbox
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

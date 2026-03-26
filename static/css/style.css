@@ -1,0 +1,39 @@
+body {
+    background-color: #f8f9fa;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.navbar-brand {
+    font-size: 1.3rem;
+}
+
+.post-body,
+.message-body {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    line-height: 1.7;
+}
+
+.list-group-item-action:hover {
+    background-color: #f0f4ff;
+}
+
+.card {
+    border: none;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.badge {
+    font-size: 0.75em;
+}
+
+footer {
+    margin-top: auto;
+}
+
+/* Highlight agent replies */
+.border-warning {
+    border-left: 4px solid #ffc107 !important;
+}
