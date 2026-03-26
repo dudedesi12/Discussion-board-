@@ -43,6 +43,8 @@ class User(db.Model, UserMixin):
     replies = db.relationship('Reply', backref='author', lazy='dynamic', cascade='all, delete-orphan')
     sent_messages = db.relationship('Message', foreign_keys='Message.sender_id', backref='sender', lazy='dynamic')
     received_messages = db.relationship('Message', foreign_keys='Message.recipient_id', backref='recipient', lazy='dynamic')
+    # Lambda joins required: string expressions can't resolve `followers_table`
+    # in SQLAlchemy's eval scope for self-referential relationships.
     followed_agents = db.relationship(
         'User', secondary=followers_table,
         primaryjoin=lambda: User.id == followers_table.c.follower_id,
