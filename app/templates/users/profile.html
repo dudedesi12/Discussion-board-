@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% block title %}{{ user.username }} - ImmPink{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card shadow-sm mb-3">
+            <div class="card-body text-center">
+                <div class="avatar-placeholder bg-primary text-white rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width:80px;height:80px;font-size:2rem;">
+                    {{ user.username[0].upper() }}
+                </div>
+                <h4>{{ user.full_name or user.username }}</h4>
+                <p class="text-muted">@{{ user.username }}</p>
+                {% if user.role == 'agent' %}
+                <span class="badge-agent fs-6">✅ Immigration Agent{% if user.agent_verified %} <i class="bi bi-patch-check-fill"></i>{% endif %}</span>
+                <div class="mt-1">
+                    <span class="status-dot status-{{ user.availability_status or 'offline' }}"></span>
+                    <small class="text-muted ms-1">{{ (user.availability_status or 'offline').title() }}</small>
+                </div>
+                {% else %}
+                <span class="badge-student fs-6">🎓 Student Member</span>
+                {% endif %}
+            </div>
+            <div class="card-body border-top">
+                {% if user.bio %}<p class="small">{{ user.bio }}</p>{% endif %}
+                {% if user.location %}<p class="small text-muted"><i class="bi bi-geo-alt"></i> {{ user.location }}</p>{% endif %}
+                {% if user.role == 'agent' and user.get_specializations_list() %}
+                <p class="small"><strong>Specializations:</strong><br>
+                    {% for s in user.get_specializations_list() %}
+                    <span class="badge bg-success me-1 mb-1">{{ s }}</span>
+                    {% endfor %}
+                </p>
+                {% endif %}
+                {% if user.role == 'customer' %}
+                {% if user.university %}<p class="small"><i class="bi bi-building"></i> {{ user.university }}</p>{% endif %}
+                {% if user.student_status %}<p class="small"><span class="badge bg-info">{{ user.student_status.title() }}</span></p>{% endif %}
+                {% if user.visa_type %}<p class="small text-muted">Visa: {{ user.visa_type }}</p>{% endif %}
+                {% endif %}
+                <div class="d-flex gap-3 justify-content-center mt-2 small text-muted">
+                    <span><strong>{{ user.posts.count() }}</strong> Posts</span>
+                    <span><strong>{{ user.replies.count() }}</strong> Replies</span>
+                </div>
+            </div>
+            {% if current_user.is_authenticated %}
+            <div class="card-body border-top d-flex flex-column gap-2">
+                {% if current_user.id == user.id %}
+                <a href="{{ url_for('users.edit_profile', username=user.username) }}" class="btn btn-outline-primary btn-sm">Edit Profile</a>
+                {% if user.role == 'agent' and not user.agent_verified %}
+                <a href="{{ url_for('users.agent_verify') }}" class="btn btn-outline-success btn-sm">Apply for Verification</a>
+                {% endif %}
+                {% else %}
+                <button class="btn btn-outline-primary btn-sm follow-btn" data-username="{{ user.username }}" data-following="{{ 'true' if current_user.is_following(user) else 'false' }}">
+                    {% if current_user.is_following(user) %}Unfollow{% else %}Follow{% endif %}
+                </button>
+                <a href="{{ url_for('messages.compose', to=user.username) }}" class="btn btn-primary btn-sm">Send Message</a>
+                {% if user.role == 'agent' and current_user.role == 'customer' %}
+                <a href="{{ url_for('users.request_consultation', username=user.username) }}" class="btn btn-success btn-sm">Request Consultation</a>
+                {% endif %}
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="col-md-8">
+        {% if consult_form is defined %}
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5>Request Consultation</h5>
+                <form method="POST">
+                    {{ consult_form.hidden_tag() }}
+                    <div class="mb-3">
+                        {{ consult_form.topic.label(class="form-label") }}
+                        {{ consult_form.topic(class="form-select") }}
+                    </div>
+                    <div class="mb-3">
+                        {{ consult_form.preferred_time.label(class="form-label") }}
+                        {{ consult_form.preferred_time(class="form-control") }}
+                    </div>
+                    <div class="mb-3">
+                        {{ consult_form.message.label(class="form-label") }}
+                        {{ consult_form.message(class="form-control", rows=3) }}
+                    </div>
+                    {{ consult_form.submit(class="btn btn-success") }}
+                </form>
+            </div>
+        </div>
+        {% endif %}
+        {% if consultation_requests is defined and consultation_requests %}
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5>Consultation Requests</h5>
+                {% for req in consultation_requests %}
+                <div class="border rounded p-3 mb-2">
+                    <div class="d-flex justify-content-between">
+                        <strong>{{ req.topic }}</strong>
+                        <span class="badge {% if req.status == 'pending' %}bg-warning{% elif req.status == 'accepted' %}bg-success{% else %}bg-danger{% endif %}">{{ req.status.title() }}</span>
+                    </div>
+                    <small class="text-muted">From: {{ req.student.username }} · {{ req.created_at | timeago }}</small>
+                    {% if req.message %}<p class="small mt-1">{{ req.message }}</p>{% endif %}
+                    {% if req.status == 'pending' %}
+                    <form method="POST" action="{{ url_for('users.respond_consultation', id=req.id) }}" class="d-inline mt-2">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button name="action" value="accepted" class="btn btn-sm btn-success">Accept</button>
+                        <button name="action" value="declined" class="btn btn-sm btn-danger">Decline</button>
+                    </form>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        <h5 class="mb-3">Posts by {{ user.username }}</h5>
+        {% if user_posts %}
+        {% for post in user_posts %}
+        <div class="card mb-2">
+            <div class="card-body py-2 px-3">
+                <a href="{{ url_for('posts.show', id=post.id) }}" class="text-decoration-none text-dark fw-semibold">{{ post.title }}</a>
+                <div class="small text-muted mt-1">
+                    <span class="badge bg-light text-dark border me-1">{{ post.category }}</span>
+                    {{ post.created_at | timeago }} · <i class="bi bi-heart"></i> {{ post.like_count }} · <i class="bi bi-chat"></i> {{ post.reply_count }}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <p class="text-muted">No posts yet.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+document.querySelectorAll('.follow-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const username = this.dataset.username;
+        fetch(`/u/${username}/follow`, {method: 'POST', headers: {'X-CSRFToken': '{{ csrf_token() }}'}})
+            .then(r => r.json()).then(data => {
+                this.textContent = data.following ? 'Unfollow' : 'Follow';
+            });
+    });
+});
+</script>
+{% endblock %}
