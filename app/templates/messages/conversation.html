@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Conversation - ImmPink{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5>Conversation with <a href="{{ url_for('users.profile', username=other_user.username) }}">{{ other_user.username }}</a></h5>
+            <a href="{{ url_for('messages.inbox') }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i> Inbox</a>
+        </div>
+        <div class="messages-thread mb-4">
+            {% for msg in messages %}
+            <div class="d-flex {% if msg.sender_id == current_user.id %}justify-content-end{% endif %} mb-3">
+                <div class="card {% if msg.sender_id == current_user.id %}bg-primary text-white{% else %}bg-light{% endif %}" style="max-width:75%">
+                    <div class="card-body py-2 px-3">
+                        <div class="small mb-1 {% if msg.sender_id == current_user.id %}text-white-50{% else %}text-muted{% endif %}">
+                            {{ msg.sender.username if msg.sender else 'Unknown' }} · {{ msg.created_at | timeago }}
+                        </div>
+                        <div style="white-space: pre-wrap;">{{ msg.body }}</div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="card">
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('messages.reply_message', conv_id=conv_id) }}">
+                    {{ form.hidden_tag() }}
+                    <input type="hidden" name="subject" value="Re: conversation">
+                    <div class="mb-3">
+                        <textarea name="body" class="form-control" rows="3" placeholder="Type your reply..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-send"></i> Send</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

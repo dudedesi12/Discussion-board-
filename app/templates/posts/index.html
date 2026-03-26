@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}Discussions - ImmPink{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-md-9">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="mb-0">Discussions</h2>
+            {% if current_user.is_authenticated %}
+            <a href="{{ url_for('posts.create') }}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> New Post</a>
+            {% endif %}
+        </div>
+        <!-- Category Filters -->
+        <div class="mb-3 d-flex flex-wrap gap-2">
+            <a href="{{ url_for('posts.index') }}" class="btn btn-sm {% if not current_category %}btn-primary{% else %}btn-outline-secondary{% endif %}">All</a>
+            {% for cat in categories %}
+            <a href="{{ url_for('posts.index', category=cat, sort=current_sort) }}" class="btn btn-sm {% if current_category == cat %}btn-primary{% else %}btn-outline-secondary{% endif %}">{{ cat }}</a>
+            {% endfor %}
+        </div>
+        <!-- Sort Options -->
+        <div class="mb-3 btn-group btn-group-sm" role="group">
+            <a href="{{ url_for('posts.index', category=current_category, sort='newest') }}" class="btn {% if current_sort == 'newest' %}btn-secondary{% else %}btn-outline-secondary{% endif %}">Newest</a>
+            <a href="{{ url_for('posts.index', category=current_category, sort='liked') }}" class="btn {% if current_sort == 'liked' %}btn-secondary{% else %}btn-outline-secondary{% endif %}">Most Liked</a>
+            <a href="{{ url_for('posts.index', category=current_category, sort='unanswered') }}" class="btn {% if current_sort == 'unanswered' %}btn-secondary{% else %}btn-outline-secondary{% endif %}">Unanswered</a>
+        </div>
+        {% if posts %}
+        {% for post in posts %}
+        <div class="card post-card mb-3 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <h5 class="card-title mb-1">
+                        <a href="{{ url_for('posts.show', id=post.id) }}" class="text-decoration-none text-dark">{{ post.title }}</a>
+                        {% if post.is_resolved %}<span class="badge bg-success ms-1">Resolved</span>{% endif %}
+                    </h5>
+                    <span class="badge bg-light text-dark border">{{ post.category }}</span>
+                </div>
+                <p class="card-text text-muted small mb-2">{{ post.body[:200] }}{% if post.body|length > 200 %}...{% endif %}</p>
+                <div class="d-flex align-items-center gap-3 flex-wrap">
+                    {% set display_author = post.get_display_author() %}
+                    {% if display_author %}
+                        <span class="small">
+                            {% if display_author.role == 'agent' %}
+                            <span class="badge-agent">✅ {{ display_author.username }}</span>
+                            {% else %}
+                            <span class="badge-student">🎓 {{ display_author.username }}</span>
+                            {% endif %}
+                        </span>
+                    {% else %}
+                        <span class="small text-muted"><i class="bi bi-incognito"></i> Anonymous Student</span>
+                    {% endif %}
+                    <span class="small text-muted"><i class="bi bi-clock"></i> {{ post.created_at | timeago }}</span>
+                    <span class="small text-muted"><i class="bi bi-heart"></i> {{ post.like_count }}</span>
+                    <span class="small text-muted"><i class="bi bi-chat"></i> {{ post.reply_count }}</span>
+                    <span class="small text-muted"><i class="bi bi-eye"></i> {{ post.view_count }}</span>
+                    {% for tag in post.get_tags_list()[:3] %}
+                    <a href="{{ url_for('posts.index', tag=tag) }}" class="badge bg-secondary text-decoration-none">{{ tag }}</a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        <!-- Pagination -->
+        {% if pagination.pages > 1 %}
+        <nav>
+            <ul class="pagination">
+                {% if pagination.has_prev %}
+                <li class="page-item"><a class="page-link" href="{{ url_for('posts.index', page=pagination.prev_num, category=current_category, sort=current_sort) }}">Previous</a></li>
+                {% endif %}
+                {% for p in pagination.iter_pages() %}
+                {% if p %}
+                <li class="page-item {% if p == pagination.page %}active{% endif %}">
+                    <a class="page-link" href="{{ url_for('posts.index', page=p, category=current_category, sort=current_sort) }}">{{ p }}</a>
+                </li>
+                {% else %}
+                <li class="page-item disabled"><span class="page-link">…</span></li>
+                {% endif %}
+                {% endfor %}
+                {% if pagination.has_next %}
+                <li class="page-item"><a class="page-link" href="{{ url_for('posts.index', page=pagination.next_num, category=current_category, sort=current_sort) }}">Next</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+        {% else %}
+        <div class="text-center py-5 text-muted">
+            <i class="bi bi-chat-dots fs-1"></i>
+            <p class="mt-2">No posts yet. Be the first to start a discussion!</p>
+            {% if current_user.is_authenticated %}
+            <a href="{{ url_for('posts.create') }}" class="btn btn-primary">Create a Post</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+    <div class="col-md-3">
+        <div class="card mb-3">
+            <div class="card-body">
+                <h6 class="card-title">About ImmPink</h6>
+                <p class="small text-muted">A trusted community for students and immigrants to share experiences and get expert guidance.</p>
+                {% if not current_user.is_authenticated %}
+                <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-sm w-100">Join Community</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

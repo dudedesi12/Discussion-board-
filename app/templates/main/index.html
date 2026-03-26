@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}ImmPink - Community for Students & Immigrants{% endblock %}
+{% block content %}
+<!-- Hero -->
+<div class="hero-section text-center py-5 mb-5 rounded-3 text-white" style="background: linear-gradient(135deg, #2563eb, #7c3aed);">
+    <div class="py-3">
+        <h1 class="display-5 fw-bold">The Trusted Community for<br>Students &amp; Immigrants 🌐</h1>
+        <p class="lead mt-3 mb-4">Ask questions, share experiences, and connect with verified immigration experts.</p>
+        <div class="d-flex justify-content-center gap-3 flex-wrap">
+            <a href="{{ url_for('posts.index') }}" class="btn btn-light btn-lg">Browse Discussions</a>
+            {% if not current_user.is_authenticated %}
+            <a href="{{ url_for('auth.register') }}" class="btn btn-outline-light btn-lg">Join for Free</a>
+            {% else %}
+            <a href="{{ url_for('posts.create') }}" class="btn btn-outline-light btn-lg">Start a Discussion</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Stats -->
+<div class="row text-center mb-5">
+    <div class="col-4">
+        <div class="card py-3">
+            <h3 class="text-primary fw-bold">{{ user_count }}+</h3>
+            <p class="text-muted mb-0">Members</p>
+        </div>
+    </div>
+    <div class="col-4">
+        <div class="card py-3">
+            <h3 class="text-primary fw-bold">{{ post_count }}+</h3>
+            <p class="text-muted mb-0">Discussions</p>
+        </div>
+    </div>
+    <div class="col-4">
+        <div class="card py-3">
+            <h3 class="text-primary fw-bold">{{ agent_count }}+</h3>
+            <p class="text-muted mb-0">Expert Agents</p>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Recent Posts -->
+    <div class="col-md-8">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4>Recent Discussions</h4>
+            <a href="{{ url_for('posts.index') }}" class="btn btn-sm btn-outline-primary">View All</a>
+        </div>
+        {% if recent_posts %}
+        {% for post in recent_posts %}
+        <div class="card post-card mb-3 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <h6 class="mb-1"><a href="{{ url_for('posts.show', id=post.id) }}" class="text-decoration-none text-dark">{{ post.title }}</a></h6>
+                    <span class="badge bg-light text-dark border small">{{ post.category }}</span>
+                </div>
+                <p class="small text-muted mb-1">{{ post.body[:120] }}...</p>
+                <div class="small text-muted d-flex gap-3">
+                    {% set a = post.get_display_author() %}
+                    {% if a %}<span>{% if a.role == 'agent' %}✅{% else %}🎓{% endif %} {{ a.username }}</span>{% else %}<span>Anonymous</span>{% endif %}
+                    <span>{{ post.created_at | timeago }}</span>
+                    <span><i class="bi bi-chat"></i> {{ post.reply_count }}</span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="text-center py-4 text-muted">
+            <p>No discussions yet. <a href="{{ url_for('posts.create') }}">Start one!</a></p>
+        </div>
+        {% endif %}
+    </div>
+    <!-- Agent Directory -->
+    <div class="col-md-4">
+        <h4 class="mb-3">Expert Agents</h4>
+        {% if agents %}
+        {% for agent in agents %}
+        <div class="card mb-2">
+            <div class="card-body py-2 px-3">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center" style="width:36px;height:36px;font-size:1rem;font-weight:700;flex-shrink:0;">{{ agent.username[0].upper() }}</div>
+                    <div>
+                        <a href="{{ url_for('users.profile', username=agent.username) }}" class="text-decoration-none fw-semibold text-dark">{{ agent.username }}</a>
+                        {% if agent.agent_verified %}<i class="bi bi-patch-check-fill text-success small"></i>{% endif %}
+                        <br><small class="text-muted">{{ agent.get_specializations_list()|join(', ') or 'Immigration Expert' }}</small>
+                    </div>
+                    <span class="ms-auto status-dot status-{{ agent.availability_status or 'offline' }}"></span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <p class="text-muted small">No agents yet.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

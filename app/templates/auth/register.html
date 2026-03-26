@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Register - ImmPink{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h2 class="card-title text-center mb-4">Join ImmPink 🌐</h2>
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">I am a...</label>
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <div class="card role-card border-2" id="card-customer" onclick="selectRole('customer')" style="cursor:pointer;">
+                                    <div class="card-body text-center py-3">
+                                        <div class="fs-2">🎓</div>
+                                        <div class="fw-semibold">Student / Member</div>
+                                        <small class="text-muted">Ask questions, share experiences</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="card role-card border-2" id="card-agent" onclick="selectRole('agent')" style="cursor:pointer;">
+                                    <div class="card-body text-center py-3">
+                                        <div class="fs-2">✅</div>
+                                        <div class="fw-semibold">Immigration Agent</div>
+                                        <small class="text-muted">Provide expert guidance</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="display:none;">
+                            {{ form.role(id="role-select") }}
+                        </div>
+                        {% for e in form.role.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.username.label(class="form-label") }}
+                        {{ form.username(class="form-control" + (" is-invalid" if form.username.errors else ""), placeholder="Choose a username") }}
+                        {% for e in form.username.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.email.label(class="form-label") }}
+                        {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else ""), placeholder="you@example.com") }}
+                        {% for e in form.email.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.password.label(class="form-label") }}
+                        {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else ""), placeholder="At least 6 characters") }}
+                        {% for e in form.password.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.password2.label(class="form-label") }}
+                        {{ form.password2(class="form-control" + (" is-invalid" if form.password2.errors else ""), placeholder="Repeat password") }}
+                        {% for e in form.password2.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+                    </div>
+                    {{ form.submit(class="btn btn-primary w-100 mt-2") }}
+                </form>
+                <hr>
+                <p class="text-center mb-0">Already have an account? <a href="{{ url_for('auth.login') }}">Log in</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+function selectRole(role) {
+    var sel = document.getElementById('role-select');
+    if (sel) sel.value = role;
+    document.getElementById('card-customer').className = 'card role-card border-2 ' + (role === 'customer' ? 'border-primary bg-primary bg-opacity-10' : '');
+    document.getElementById('card-agent').className = 'card role-card border-2 ' + (role === 'agent' ? 'border-success bg-success bg-opacity-10' : '');
+}
+document.addEventListener('DOMContentLoaded', function() {
+    var sel = document.getElementById('role-select');
+    selectRole(sel ? sel.value || 'customer' : 'customer');
+});
+</script>
+{% endblock %}
