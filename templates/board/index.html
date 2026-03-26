@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+
+{% block title %}Discussion Board - Home{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="bi bi-chat-square-text me-2"></i>Discussion Board</h2>
+            {% if current_user.is_authenticated %}
+            <a href="{{ url_for('board.new_post') }}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-1"></i>New Post
+            </a>
+            {% endif %}
+        </div>
+
+        {% if posts %}
+        <div class="list-group">
+            {% for post in posts %}
+            <a href="{{ url_for('board.view_post', post_id=post.id) }}"
+               class="list-group-item list-group-item-action p-3">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                        <div class="d-flex align-items-center mb-1">
+                            <span class="badge bg-secondary me-2">{{ post.category }}</span>
+                            <h5 class="mb-0">{{ post.title }}</h5>
+                        </div>
+                        <p class="mb-1 text-muted text-truncate">{{ post.body[:150] }}{% if post.body|length > 150 %}...{% endif %}</p>
+                        <small class="text-muted">
+                            <i class="bi bi-person me-1"></i>
+                            {% if post.author.is_agent %}
+                            <span class="badge bg-warning text-dark me-1">Agent</span>
+                            {% endif %}
+                            {{ post.author.username }}
+                            &nbsp;&bull;&nbsp;
+                            <i class="bi bi-clock me-1"></i>{{ post.created_at.strftime('%b %d, %Y %H:%M') }}
+                            &nbsp;&bull;&nbsp;
+                            <i class="bi bi-chat me-1"></i>{{ post.reply_count }} replies
+                        </small>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-chat-dots display-1 text-muted"></i>
+            <p class="text-muted mt-3">No posts yet. Be the first to start a discussion!</p>
+            {% if current_user.is_authenticated %}
+            <a href="{{ url_for('board.new_post') }}" class="btn btn-primary mt-2">
+                <i class="bi bi-plus-circle me-1"></i>Create Post
+            </a>
+            {% else %}
+            <a href="{{ url_for('auth.register') }}" class="btn btn-primary mt-2">Join Now</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <i class="bi bi-info-circle me-1"></i>About This Board
+            </div>
+            <div class="card-body">
+                <p class="card-text">Welcome to the Discussion Board! This is a place where
+                <strong>customers</strong> (students, workers, immigrants) can share their
+                problems and get help from <strong>agents</strong>.</p>
+                {% if not current_user.is_authenticated %}
+                <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-sm w-100 mb-2">
+                    <i class="bi bi-person-plus me-1"></i>Register
+                </a>
+                <a href="{{ url_for('auth.login') }}" class="btn btn-outline-primary btn-sm w-100">
+                    <i class="bi bi-box-arrow-in-right me-1"></i>Login
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <i class="bi bi-headset me-1"></i>Available Agents
+            </div>
+            <div class="card-body p-0">
+                <ul class="list-group list-group-flush">
+                    {% for agent in agents %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="bi bi-person-badge me-1"></i>{{ agent.username }}</span>
+                        {% if current_user.is_authenticated %}
+                        <a href="{{ url_for('messages.compose', username=agent.username) }}"
+                           class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-envelope me-1"></i>Message
+                        </a>
+                        {% endif %}
+                    </li>
+                    {% else %}
+                    <li class="list-group-item text-muted">No agents registered yet.</li>
+                    {% endfor %}
+                </ul>
+                <p class="p-3 mb-0 text-muted small">
+                    <a href="{{ url_for('board.users_list') }}">View all agents and users &rarr;</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
