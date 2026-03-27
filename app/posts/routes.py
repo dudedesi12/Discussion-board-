@@ -55,7 +55,7 @@ def create():
 @posts.route('/<int:id>')
 def show(id):
     post = Post.query.get_or_404(id)
-    post.view_count = (post.view_count or 0) + 1
+    Post.query.filter_by(id=post.id).update({Post.view_count: (Post.view_count or 0) + 1})
     db.session.commit()
     form = ReplyForm()
     user_liked = False
@@ -136,7 +136,7 @@ def like_reply(id):
 @login_required
 def delete_post(id):
     post = Post.query.get_or_404(id)
-    if post.author_id != current_user.id and current_user.role not in ('agent', 'admin'):
+    if post.author_id != current_user.id and current_user.role != 'admin':
         abort(403)
     db.session.delete(post)
     db.session.commit()
@@ -149,9 +149,9 @@ def delete_post(id):
 def delete_reply(id):
     r = Reply.query.get_or_404(id)
     post_id = r.post_id
-    if r.author_id != current_user.id and current_user.role not in ('agent', 'admin'):
+    if r.author_id != current_user.id and current_user.role != 'admin':
         abort(403)
-    post = Post.query.get(post_id)
+    post = db.session.get(Post, post_id)
     if post:
         post.reply_count = max(0, (post.reply_count or 0) - 1)
     db.session.delete(r)

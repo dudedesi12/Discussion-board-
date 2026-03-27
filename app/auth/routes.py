@@ -1,5 +1,6 @@
 from flask import render_template, redirect, url_for, flash, request
 from flask_login import login_user, logout_user, login_required, current_user
+from urllib.parse import urlparse
 from app import db
 from app.auth import auth
 from app.models import User
@@ -31,6 +32,10 @@ def login():
         if user and user.check_password(form.password.data):
             login_user(user, remember=form.remember_me.data)
             next_page = request.args.get('next')
+            if next_page:
+                parsed = urlparse(next_page)
+                if parsed.netloc or parsed.scheme:
+                    next_page = None
             flash('Welcome back!', 'success')
             return redirect(next_page or url_for('main.index'))
         flash('Invalid email or password.', 'danger')
