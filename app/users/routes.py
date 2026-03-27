@@ -92,8 +92,8 @@ def respond_consultation(id):
     action = request.form.get('action')
     if action in ('accepted', 'declined'):
         req.status = action
-        from datetime import datetime
-        req.responded_at = datetime.utcnow()
+        from datetime import datetime, timezone
+        req.responded_at = datetime.now(timezone.utc)
         db.session.commit()
         flash(f'Request {action}.', 'success')
     return redirect(url_for('users.agent_requests'))

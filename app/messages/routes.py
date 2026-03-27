@@ -59,11 +59,17 @@ def compose():
 @messages.route('/conversation/<conv_id>')
 @login_required
 def conversation(conv_id):
+    parts = conv_id.split('_')
+    if len(parts) != 2:
+        abort(404)
+    try:
+        ids = [int(x) for x in parts]
+    except ValueError:
+        abort(404)
+    if current_user.id not in ids:
+        abort(403)
     msgs = Message.query.filter_by(conversation_id=conv_id).order_by(Message.created_at.asc()).all()
     if not msgs:
-        abort(404)
-    ids = [int(x) for x in conv_id.split('_')]
-    if current_user.id not in ids:
         abort(403)
     for m in msgs:
         if m.recipient_id == current_user.id and not m.is_read:
@@ -71,14 +77,20 @@ def conversation(conv_id):
     db.session.commit()
     form = MessageForm()
     other_id = ids[0] if ids[1] == current_user.id else ids[1]
-    other_user = User.query.get(other_id)
+    other_user = db.session.get(User, other_id)
     return render_template('messages/conversation.html', messages=msgs, conv_id=conv_id, other_user=other_user, form=form)
 
 
 @messages.route('/reply/<conv_id>', methods=['POST'])
 @login_required
 def reply_message(conv_id):
-    ids = [int(x) for x in conv_id.split('_')]
+    parts = conv_id.split('_')
+    if len(parts) != 2:
+        abort(404)
+    try:
+        ids = [int(x) for x in parts]
+    except ValueError:
+        abort(404)
     if current_user.id not in ids:
         abort(403)
     other_id = ids[0] if ids[1] == current_user.id else ids[1]

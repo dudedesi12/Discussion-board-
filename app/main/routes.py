@@ -1,4 +1,5 @@
 from flask import render_template, jsonify, request
+from flask_login import login_required
 from app.main import main
 from app.models import Post, User
 
@@ -20,6 +21,7 @@ def health():
 
 
 @main.route('/api/users/search')
+@login_required
 def search_users():
     q = request.args.get('q', '').strip()
     if len(q) < 2:

@@ -1,11 +1,11 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from flask_login import UserMixin
 from app import db, login_manager
 
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    return db.session.get(User, int(user_id))
 
 
 followers_table = db.Table('followers',
@@ -35,7 +35,7 @@ class User(db.Model, UserMixin):
     specializations = db.Column(db.Text)
     availability_status = db.Column(db.String(20), default='offline')
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     last_seen = db.Column(db.DateTime)
     is_active = db.Column(db.Boolean, default=True)
 
@@ -88,8 +88,8 @@ class Post(db.Model):
     tags = db.Column(db.Text)
 
     author_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, onupdate=lambda: datetime.now(timezone.utc))
 
     like_count = db.Column(db.Integer, default=0)
     reply_count = db.Column(db.Integer, default=0)
@@ -119,7 +119,7 @@ class PostLike(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     post_id = db.Column(db.Integer, db.ForeignKey('post.id'), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     __table_args__ = (db.UniqueConstraint('user_id', 'post_id', name='uq_like_user_post'),)
 
 
@@ -128,7 +128,7 @@ class Reply(db.Model):
     body = db.Column(db.Text, nullable=False)
     post_id = db.Column(db.Integer, db.ForeignKey('post.id'), nullable=False)
     author_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     like_count = db.Column(db.Integer, default=0)
     is_anonymous = db.Column(db.Boolean, default=False)
@@ -146,7 +146,7 @@ class ReplyLike(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     reply_id = db.Column(db.Integer, db.ForeignKey('reply.id'), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     __table_args__ = (db.UniqueConstraint('user_id', 'reply_id', name='uq_like_user_reply'),)
 
 
@@ -161,7 +161,7 @@ class Message(db.Model):
     reference_post_id = db.Column(db.Integer, db.ForeignKey('post.id'))
 
     is_read = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     parent_message_id = db.Column(db.Integer, db.ForeignKey('message.id'))
     conversation_id = db.Column(db.String(64), index=True)
@@ -185,7 +185,7 @@ class VerificationRequest(db.Model):
     reviewed_by = db.Column(db.Integer, db.ForeignKey('user.id'))
     reviewed_at = db.Column(db.DateTime)
     rejection_reason = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     agent = db.relationship('User', foreign_keys=[agent_id], backref='verification_requests')
 
@@ -203,8 +203,8 @@ class Resource(db.Model):
     download_count = db.Column(db.Integer, default=0)
     helpful_count = db.Column(db.Integer, default=0)
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, onupdate=lambda: datetime.now(timezone.utc))
 
     author = db.relationship('User', backref='resources')
 
@@ -219,7 +219,7 @@ class ConsultationRequest(db.Model):
     message = db.Column(db.Text)
 
     status = db.Column(db.String(20), default='pending')
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     responded_at = db.Column(db.DateTime)
 
     student = db.relationship('User', foreign_keys=[student_id], backref='consultation_requests_sent')
